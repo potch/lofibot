@@ -1,5 +1,6 @@
 const Hz = Math.PI * 2;
 const BPM = 1 / 60;
+const status = document.querySelector(".status");
 
 // note to frequency
 const note = n => 440 * Math.pow(2, (n - 69) / 12);
@@ -132,14 +133,20 @@ document.querySelector(".start").addEventListener("click", async e => {
         ) * 2,
         hiss / 15
       );
-      if (Date.now() - lastBreath > 250) {
-        console.log(`channel ${channel}, ${((i / buffer.length) * 100) | 0}`);
+      if (Date.now() - lastBreath > 100) {
+        status.innerText = `generating: channel ${channel}, ${
+          ((i / buffer.length / track.channelCount +
+            channel / track.channelCount) *
+            100) |
+          0
+        }%`;
         await breathe();
         lastBreath = Date.now();
       }
     }
   }
 
+  status.innerText = "playing";
   track.buffer = data;
 
   const osc = context.createOscillator();
