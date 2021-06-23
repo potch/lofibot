@@ -268,7 +268,7 @@ async function go(e) {
     data[i] = Math.random() * 0.01 - 0.005;
   }
   source.buffer = buffer;
-  // source.loop = true;
+  source.loop = true;
   source.connect(processor);
   source.start();
 
