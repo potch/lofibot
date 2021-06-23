@@ -171,7 +171,11 @@ window.onerror = e => {
 };
 
 // generate and play the song
-document.querySelector(".start").addEventListener("click", async e => {
+document
+  .querySelector(".start")
+  .addEventListener("click", e => go(e).catch(e => console.warn(e)));
+
+async function go(e) {
   const AudioContext = window.AudioContext || window.webkitAudioContext;
   const context = new AudioContext();
   const { sampleRate } = context;
@@ -182,9 +186,12 @@ document.querySelector(".start").addEventListener("click", async e => {
   const hat = await loadSound(context, "hat1.mp3");
   const snare = await loadSound(context, "snare2.wav");
 
-  const processor = context.createScriptProcessor(16384, 0, 2);
+  const processor = context.createScriptProcessor(4096, 1, 2);
 
+  let didbip = false;
   processor.onaudioprocess = function (audioProcessingEvent) {
+    if (!didbip) console.log("bip");
+    didbip = true;
     // The output buffer contains the samples that will be modified and played
     var outputBuffer = audioProcessingEvent.outputBuffer;
 
@@ -250,10 +257,24 @@ document.querySelector(".start").addEventListener("click", async e => {
   const gain = context.createGain();
   gain.gain.value = 0.25;
 
-  processor.connect(gain);
+  processor.connect(context.destination);
   gain.connect(context.destination);
+
+  // thanks safari
+  let source = context.createBufferSource();
+  let buffer = context.createBuffer(1, 1024, context.sampleRate);
+  let data = buffer.getChannelData(0);
+  for (let i = 0; i < data.length; i++) {
+    data[i] = Math.random() * 0.01 - 0.005;
+  }
+  source.buffer = buffer;
+  // source.loop = true;
+  source.connect(processor);
+  source.start();
 
   document
     .querySelector(".generate")
     .addEventListener("click", e => generate(context));
-});
+
+  console.log(processor);
+}
