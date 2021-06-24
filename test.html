@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <button>do</button>
+    <script>
+      document
+        .querySelector("button")
+        .addEventListener("click", e => go(e).catch(e => console.warn(e)));
+
+      async function go(e) {
+        // const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const context = new AudioContext();
+        const { sampleRate } = context;
+
+        const processor = context.createScriptProcessor(4096, 2, 2);
+
+        let didbip = false;
+        processor.onaudioprocess = function (audioProcessingEvent) {
+          if (!didbip) console.log("bip");
+          didbip = true;
+          // The output buffer contains the samples that will be modified and played
+          var outputBuffer = audioProcessingEvent.outputBuffer;
+
+          for (
+            let channel = 0;
+            channel < outputBuffer.numberOfChannels;
+            channel++
+          ) {
+            let buffer = outputBuffer.getChannelData(channel);
+            for (var i = 0; i < buffer.length; i++) {
+              buffer[i] = Math.random() * 0.1 - 0.05;
+            }
+          }
+        };
+
+        // processor.connect(context.destination);
+
+        // thanks safari
+        let source = context.createBufferSource();
+        let buffer = context.createBuffer(2, 4096, context.sampleRate);
+        let data = buffer.getChannelData(0);
+        let data2 = buffer.getChannelData(1);
+        for (let i = 0; i < data.length; i++) {
+          data[i] = Math.random() * 0.1 - 0.05;
+          data2[i] = Math.random() * 0.1 - 0.05;
+        }
+        source.buffer = buffer;
+        source.loop = true;
+        source.connect(processor);
+        processor.connect(context.destination);
+        source.start();
+
+        console.log(buffer);
+        console.log(processor);
+      }
+    </script>
+  </body>
+</html>
