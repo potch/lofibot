@@ -5,12 +5,38 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>lofibot</title>
+    <link rel="stylesheet" href="style.css" />
     <script type="module" src="index.js"></script>
   </head>
   <body>
-    <h1>lofibot</h1>
-    <button class="start">start</button>
-    <button class="generate">next song</button>
-    <span class="status"></span>
+    <header>
+      <h1>lofibot</h1>
+      <button class="start">start</button>
+      <button class="generate" disabled>next song</button>
+      <label>
+        <i>volume</i>
+        <input
+          class="volume"
+          type="range"
+          min="0"
+          max="1"
+          step=".01"
+          value=".5"
+        />
+      </label>
+    </header>
+    <div class="knobs">
+      <div class="knob volume">
+        <div class="knob__thumb"></div>
+        <span>VOL</span>
+      </div>
+    </div>
+    <div class="waveform">
+      <canvas></canvas>
+    </div>
+    <div class="tracks">
+      <canvas></canvas>
+    </div>
+    <pre class="status"></pre>
   </body>
 </html>

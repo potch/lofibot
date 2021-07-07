@@ -1,0 +1,131 @@
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  height: 100vh;
+  margin: 0;
+}
+html {
+  background: seashell;
+  color: darkslateblue;
+  font-size: 20px;
+}
+body {
+  padding: 16px;
+  display: grid;
+  grid: "header header" auto "knobs viz" min-content "tracks tracks" 1fr "footer footer" auto / auto 1fr;
+  grid-gap: 1em;
+}
+header {
+  grid-area: header;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+label > * + * {
+  margin-left: 1em;
+}
+header > * + * {
+  margin-left: 1em;
+}
+.tracks {
+  grid-area: tracks;
+  display: grid;
+  background: indigo;
+  position: relative;
+}
+.knobs {
+  grid-area: knobs;
+  border: 3px solid pink;
+  background: indigo;
+  display: flex;
+  flex-wrap: wrap;
+  padding: 0.5rem;
+  align-content: start;
+}
+.knob {
+  display: grid;
+  grid-template-rows: auto auto;
+  grid-gap: 0.125rem;
+  font-size: 0.7rem;
+  width: 3.5rem;
+  height: 3.5rem;
+  color: pink;
+  font-family: sans-serif;
+  font-variant-caps: small-caps;
+  letter-spacing: 0.1em;
+  position: relative;
+  padding: 0.5rem 0.25rem 0.25rem;
+  background: rgba(0, 0, 0, 0.5);
+  justify-content: center;
+  align-items: center;
+}
+.knob__thumb {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 100%;
+  background: pink;
+  display: block;
+  justify-self: center;
+  position: relative;
+  border: 2px solid deeppink;
+}
+.knob__thumb:after {
+  display: block;
+  content: "";
+  width: 0.3rem;
+  height: 0.3rem;
+  position: absolute;
+  top: 0.125rem;
+  left: calc(50% - 0.15rem);
+  border-radius: 100%;
+  background: indigo;
+}
+canvas {
+  display: block;
+  border: 3px solid pink;
+  background: indigo;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.waveform {
+  grid-area: viz;
+  position: relative;
+}
+.status {
+  grid-area: footer;
+  margin: 0;
+  font-variant-caps: small-caps;
+  letter-spacing: 0.1em;
+}
+h1 {
+  font-family: serif;
+  font-style: italic;
+  margin: 0;
+  letter-spacing: 0.05em;
+}
+button {
+  font: inherit;
+  color: pink;
+  border: 3px solid currentColor;
+  background: darkslateblue;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25em 1em;
+  cursor: pointer;
+}
+
+button[disabled] {
+  opacity: 0.5;
+  filter: sepia(50%);
+}
