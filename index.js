@@ -4,7 +4,7 @@ const status = document.querySelector(".status");
 const samples = {};
 
 // note to frequency
-const note = n => 440 * Math.pow(2, (n - 69) / 12);
+const note = (n) => 440 * Math.pow(2, (n - 69) / 12);
 const PITCHES = {
   C: 0,
   D: 2,
@@ -48,15 +48,15 @@ const mix = (...parts) =>
   parts.reduce((sum, part) => sum + part, 0) / Math.sqrt(parts.length);
 
 // chords
-const chord = (n, intervals) => intervals.map(i => note(n + i));
+const chord = (n, intervals) => intervals.map((i) => note(n + i));
 const chords = {
   MAJOR: [0, 4, 7, 12],
   SUS4: [0, 5, 7, 12],
   MAJOR7: [0, 4, 7, 14],
-  MAJOR9: [0, 4, 7, 18],
+  MAJOR9: [0, 4, 7, 11, 14, 19],
   MINOR: [0, 3, 7, 12],
   MINOR7: [0, 3, 7, 10],
-  MINOR9: [0, 3, 7, 12],
+  MINOR9: [0, 3, 7, 10, 14, 17],
   MINOR11: [0, 3, 7, 10, 17],
   DIM7: [0, 3, 6, 9],
   DOM7: [0, 4, 7, 10],
@@ -66,8 +66,8 @@ const chords = {
 // sampling
 const loadSound = (ctx, path) =>
   fetch(path)
-    .then(r => r.arrayBuffer())
-    .then(buffer => ctx.decodeAudioData(buffer));
+    .then((r) => r.arrayBuffer())
+    .then((buffer) => ctx.decodeAudioData(buffer));
 
 const sample = (buffer, channel, i) =>
   buffer.getChannelData(channel % channel.numberOfChannels)[i | 0] || 0;
@@ -84,7 +84,7 @@ const beatSequence = (sequence, t, factor) => {
   return 0;
 };
 
-const envelope = (attack, sustain, release) => t => {
+const envelope = (attack, sustain, release) => (t) => {
   if (t < 0) return 0;
   if (t < attack) {
     return t / attack;
@@ -144,7 +144,7 @@ function drawTracks(canvas, tracks, currentTime, tempo) {
   // draw track blocks
   tracks
     .filter(
-      t =>
+      (t) =>
         t.startTime < currentTime + visWindow &&
         t.endTime > currentTime - visWindow
     )
@@ -228,45 +228,46 @@ function drawKnobs(knobs) {
   ).style.transform = `rotate(${volumeRotation}deg)`;
 }
 
-const bassTrack =
-  (type, envelope) =>
-  ({ t, key, fBeat }) =>
-    type(note(key[0] - 12), t) *
-    (sine(0.5, t) / 8 + (1 - 1 / 8)) *
-    envelope(fBeat);
+const bassTrack = (type, envelope) => ({ t, key, fBeat }) =>
+  type(note(key[0] - 12), t) *
+  (sine(0.5, t) / 8 + (1 - 1 / 8)) *
+  envelope(fBeat);
 
-const drumTrack =
-  (sampleBuffer, pattern, ticksPerBeat = 4) =>
-  ({ channel, songBeat, sampleRate }) =>
-    sample(
-      sampleBuffer,
-      channel,
-      beatSequence(
-        pattern,
-        (songBeat / (pattern.length / ticksPerBeat)) % 1,
-        ticksPerBeat
-      ) * sampleRate
-    );
+const drumTrack = (sampleBuffer, pattern, ticksPerBeat = 4) => ({
+  channel,
+  songBeat,
+  sampleRate,
+}) =>
+  sample(
+    sampleBuffer,
+    channel,
+    beatSequence(
+      pattern,
+      (songBeat / (pattern.length / ticksPerBeat)) % 1,
+      ticksPerBeat
+    ) * sampleRate
+  );
 
-const arpeggiatorTrack =
-  (wave, envelope, speed = 8) =>
-  ({ t, chordNotes, fBar, fBeat }) => {
-    let b = fBeat % 1;
-    let pos = (fBar * speed) % chordNotes.length;
-    return wave(chordNotes[pos | 0], t) * envelope(pos % 1);
-  };
+const arpeggiatorTrack = (wave, envelope, speed = 8) => ({
+  t,
+  chordNotes,
+  fBar,
+  fBeat,
+}) => {
+  let b = fBeat % 1;
+  let pos = (fBar * speed) % chordNotes.length;
+  return wave(chordNotes[pos | 0], t) * envelope(pos % 1);
+};
 
-const chordTrack =
-  (spacing = 0, envelope) =>
-  ({ t, chordNotes, fBeat }) => {
-    let out = 0;
-    for (let i = 0; i < chordNotes.length; i++) {
-      let note = chordNotes[i];
-      if (fBeat > i * spacing)
-        out += sine(note, t) * envelope(fBeat - i * spacing);
-    }
-    return out;
-  };
+const chordTrack = (spacing = 0, envelope) => ({ t, chordNotes, fBeat }) => {
+  let out = 0;
+  for (let i = 0; i < chordNotes.length; i++) {
+    let note = chordNotes[i];
+    if (fBeat > i * spacing)
+      out += sine(note, t) * envelope(fBeat - i * spacing);
+  }
+  return out;
+};
 
 let progression, TEMPO, snarePattern, kickPattern, hatPattern, songStartTime;
 
@@ -282,6 +283,18 @@ function generate(context, knobs) {
 
   const progressions = [
     [
+      [pitch("D", 4), chords.MINOR11],
+      [pitch("Eb", 4), chords.MINOR11],
+      [pitch("D", 4), chords.MINOR11],
+      [pitch("Eb", 4), chords.MINOR11],
+    ],
+    [
+      [pitch("F", 4), chords.MINOR9],
+      [pitch("Eb", 4), chords.MAJOR9],
+      [pitch("F", 4), chords.MINOR9],
+      [pitch("Eb", 4), chords.MAJOR9],
+    ],
+    [
       // Dmin11 – Gmin7 – Dmin11 – Ebmin11 – C#dim7
       [pitch("D", 4), chords.MINOR11],
       [pitch("G", 4), chords.MINOR7],
@@ -292,7 +305,7 @@ function generate(context, knobs) {
     // Amin11 – D7 – Fmaj7 – Cmaj7
     [
       [pitch("A", 4), chords.MINOR11],
-      [pitch("D", 4), chords.MAJOR7],
+      [pitch("D", 4), chords.DOM7],
       [pitch("F", 4), chords.MAJOR7],
       [pitch("C", 4), chords.MAJOR7],
     ],
@@ -315,8 +328,8 @@ function generate(context, knobs) {
   progression = progressions[(Math.random() * progressions.length) | 0];
 
   let transpose = Math.round(Math.random() * 12);
-  console.log(transpose);
-  progression.forEach(chord => {
+  console.log(progression);
+  progression.forEach((chord) => {
     chord[0] += transpose;
     chord[1] = [...chord[1]];
     for (let i = 1; i < chord[1].length; i++) {
@@ -427,7 +440,7 @@ function generate(context, knobs) {
 
   // 4 / (60/60)
   barDuration = 4 / (TEMPO * BPM);
-  tracks.forEach(t => {
+  tracks.forEach((t) => {
     t.startTime = (t.start || 0) * barDuration;
     if (t.end) {
       t.endTime = t.end * barDuration;
@@ -454,14 +467,14 @@ function generate(context, knobs) {
   console.log(...tracks);
 }
 
-window.onerror = e => {
+window.onerror = (e) => {
   status.innerText = e;
 };
 
 // generate and play the song
 document
   .querySelector(".start")
-  .addEventListener("click", e => go(e).catch(e => console.warn(e)));
+  .addEventListener("click", (e) => go(e).catch((e) => console.warn(e)));
 
 async function go(e) {
   document.querySelector(".start").setAttribute("disabled", true);
@@ -472,11 +485,15 @@ async function go(e) {
   const { sampleRate } = context;
   const knobs = {
     globalVolume: context.createGain(),
+    filter: context.createBiquadFilter(),
   };
+
+  knobs.filter.type = "highpass";
+  knobs.filter.frequency.setValueAtTime(0, context.currentTime);
 
   samples.kick = await loadSound(context, "kick1.wav");
   samples.hat = await loadSound(context, "hat1.mp3");
-  samples.snare = await loadSound(context, "snare1.wav");
+  samples.snare = await loadSound(context, "snare2.wav");
   samples.piano = await loadSound(context, "piano1.wav");
 
   generate(context, knobs);
@@ -604,15 +621,15 @@ async function go(e) {
 
   document
     .querySelector(".generate")
-    .addEventListener("click", e => generate(context, knobs));
+    .addEventListener("click", (e) => generate(context, knobs));
 
-  document.querySelector(".volume").addEventListener("input", e => {
+  document.querySelector(".volume").addEventListener("input", (e) => {
     userVolume.gain.setValueAtTime(
       parseFloat(e.target.value),
       context.currentTime
     );
   });
-  document.querySelector(".volume").addEventListener("change", e => {
+  document.querySelector(".volume").addEventListener("change", (e) => {
     userVolume.gain.setValueAtTime(
       parseFloat(e.target.value),
       context.currentTime
