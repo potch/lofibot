@@ -127,59 +127,87 @@ export function generate(context, knobs, samples) {
   song.tracks = [
     {
       name: "bass",
-      start: 0,
-      render: bassTrack(triangle, envelope(0.25, 1, 3.9)),
       volume: 0.2,
+      chunks: [
+        {
+          start: 0,
+          render: bassTrack(triangle, envelope(0.25, 1, 3.9)),
+        },
+      ],
     },
     {
       name: "snare",
-      start: 0,
-      render: drumTrack(samples.snare, snarePattern),
       volume: 0.3,
+      chunks: [
+        {
+          start: 0,
+          render: drumTrack(samples.snare, snarePattern),
+        },
+      ],
     },
     {
       name: "kick",
-      start: 0,
-      render: drumTrack(samples.kick, kickPattern),
       volume: 0.3,
+      chunks: [
+        {
+          start: 0,
+          render: drumTrack(samples.kick, kickPattern),
+        },
+      ],
     },
     {
       name: "hat",
-      start: 0,
-      render: drumTrack(samples.hat, hatPattern),
       volume: 0.3,
+      chunks: [
+        {
+          start: 0,
+          render: drumTrack(samples.hat, hatPattern),
+        },
+      ],
     },
     {
       name: "arp",
-      start: song.progression.length * 2,
-      length: song.progression.length * 4,
-      render: arpeggiatorTrack(triangle, envelope(0.1, 0.2, 0.99), arpSpeed),
       volume: 0.2,
-    },
-    {
-      name: "arp",
-      start: song.progression.length * 10,
-      render: arpeggiatorTrack(triangle, envelope(0.1, 0.2, 0.99), arpSpeed),
-      volume: 0.2,
+      chunks: [
+        {
+          start: song.progression.length * 2,
+          length: song.progression.length * 4,
+          render: arpeggiatorTrack(
+            triangle,
+            envelope(0.1, 0.2, 0.99),
+            arpSpeed
+          ),
+        },
+        {
+          start: song.progression.length * 10,
+          render: arpeggiatorTrack(
+            triangle,
+            envelope(0.1, 0.2, 0.99),
+            arpSpeed
+          ),
+        },
+      ],
     },
     {
       name: "chord",
-      render: chordTrack(
-        Math.floor(Math.random() * 8) / 8,
-        envelope(0.1, 0.4, 4)
-      ),
-      start: 0,
-      length: song.progression.length * 6,
       volume: 0.2,
-    },
-    {
-      name: "chord",
-      start: song.progression.length * 10,
-      render: chordTrack(
-        Math.floor(Math.random() * 8) / 8,
-        envelope(0.1, 0.4, 4)
-      ),
-      volume: 0.2,
+      chunks: [
+        {
+          render: chordTrack(
+            Math.floor(Math.random() * 8) / 8,
+            envelope(0.1, 0.4, 4)
+          ),
+          start: 0,
+          length: song.progression.length * 6,
+        },
+        {
+          start: song.progression.length * 10,
+          render: chordTrack(
+            Math.floor(Math.random() * 8) / 8,
+            envelope(0.1, 0.4, 4)
+          ),
+        },
+      ],
     },
   ];
 
@@ -196,14 +224,18 @@ export function generate(context, knobs, samples) {
   // 4 / (60/60)
   let barDuration = 4 / (song.tempo * BPM);
   song.tracks.forEach(t => {
-    t.startTime = (t.start || 0) * barDuration;
-    if (t.end) {
-      t.endTime = t.end * barDuration;
-    } else if (t.length) {
-      t.endTime = t.startTime + t.length * barDuration;
-    } else {
-      t.endTime = t.startTime + song.length * barDuration;
-    }
+    if (!t.chunks) return;
+    t.chunks.forEach(c => {
+      c.track = t;
+      c.startTime = (c.start || 0) * barDuration;
+      if (c.end) {
+        c.endTime = c.end * barDuration;
+      } else if (c.length) {
+        c.endTime = c.startTime + c.length * barDuration;
+      } else {
+        c.endTime = c.startTime + song.length * barDuration;
+      }
+    });
   });
 
   if (song.automations.volume) {
@@ -239,5 +271,6 @@ export function generate(context, knobs, samples) {
     });
   }
 
+  console.log(song);
   return song;
 }

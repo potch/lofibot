@@ -43,19 +43,20 @@ export function drawTracks(canvas, tracks, currentTime, tempo) {
   ctx.save();
   ctx.translate(0, tickHeight);
   // draw track blocks
-  tracks
+  const chunks = tracks.flatMap(t => t.chunks);
+  chunks
     .filter(
-      t =>
-        t.startTime < currentTime + visWindow &&
-        t.endTime > currentTime - visWindow
+      c =>
+        c.startTime < currentTime + visWindow &&
+        c.endTime > currentTime - visWindow
     )
-    .forEach((track, i, tracks) => {
+    .forEach((chunk, i) => {
       const trackSize = trackHeight / tracks.length;
       const start = Math.max(
         lerp(
           0,
           canvas.width,
-          ilerp(-visWindow, visWindow, track.startTime - currentTime)
+          ilerp(-visWindow, visWindow, chunk.startTime - currentTime)
         ),
         0
       );
@@ -67,7 +68,7 @@ export function drawTracks(canvas, tracks, currentTime, tempo) {
           lerp(
             0,
             canvas.width,
-            ilerp(-visWindow, visWindow, track.endTime - currentTime)
+            ilerp(-visWindow, visWindow, chunk.endTime - currentTime)
           ) - start,
           canvas.width
         ),
@@ -75,10 +76,10 @@ export function drawTracks(canvas, tracks, currentTime, tempo) {
       );
       ctx.fillStyle = "indigo";
       ctx.fillText(
-        track.name,
+        chunk.track.name,
         Math.max(
           canvas.width / 2 +
-            ((track.startTime - currentTime) / visWindow) * (canvas.width / 2) +
+            ((chunk.startTime - currentTime) / visWindow) * (canvas.width / 2) +
             8,
           4
         ),

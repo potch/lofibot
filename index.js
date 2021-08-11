@@ -57,6 +57,8 @@ async function go(e) {
 
   let renderTime = 0;
   let trackDrawFrame;
+
+  // generator code
   processor.onaudioprocess = function (audioProcessingEvent) {
     if (!currentSong) return;
     let start = Date.now();
@@ -101,8 +103,12 @@ async function go(e) {
         let out = 0;
         for (let j = 0; j < tracks.length; j++) {
           let track = tracks[j];
-          if (t < track.startTime || t > track.endTime) continue;
-          out += track.render(state, track) * track.volume || 0;
+          if (!track.chunks) continue;
+          for (let k = 0; k < track.chunks.length; k++) {
+            let chunk = track.chunks[k];
+            if (t < chunk.startTime || t > chunk.endTime) continue;
+            out += chunk.render(state, chunk) * track.volume || 0;
+          }
         }
 
         buffer[i] = out;
