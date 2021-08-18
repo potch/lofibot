@@ -2,7 +2,7 @@ export const Hz = Math.PI * 2;
 export const BPM = 1 / 60;
 
 // convert MIDI note number to frequency
-export const note = (n) => 440 * Math.pow(2, (n - 69) / 12);
+export const note = n => 440 * Math.pow(2, (n - 69) / 12);
 
 // lookup for note name to note number
 export const PITCHES = {
@@ -30,7 +30,12 @@ export const pitch = (p, octave = 4) => {
 };
 
 // take note number plus intervals, spit out frequencies of chord notes
-export const chord = (n, intervals) => intervals.map((i) => note(n + i));
+export const chord = (n, intervals) => intervals.map(i => note(n + i));
+
+export const SCALES = {
+  MAJOR: [0, 2, 4, 5, 7, 9, 11],
+  MINOR: [0, 2, 3, 5, 7, 8, 10],
+};
 
 // chord intervals in integer notation
 export const CHORDS = {
@@ -46,4 +51,3 @@ export const CHORDS = {
   DOM7: [0, 4, 7, 10],
   DOM9: [0, 4, 7, 10, 14],
 };
-

@@ -11,10 +11,19 @@
   <body>
     <header>
       <h1>lofibot</h1>
-      <button class="start">start</button>
-      <button class="generate" disabled>next song</button>
+      <button class="start">
+        <svg viewBox="0 0 16 16"><path d="M2,0L14,8 2,16z" /></svg>
+      </button>
+      <button class="stop" disabled>
+        <svg viewBox="0 0 16 16"><path d="M1,1L15,1 15,15 1,15z" /></svg>
+      </button>
+      <button class="generate" disabled>
+        <svg viewBox="0 0 16 16">
+          <path d="M2,0L12,8 2,16z M13,0L15,0 15,16 13,16z" />
+        </svg>
+      </button>
       <label>
-        <i>gain</i>
+        <i>volume</i>
         <input
           class="volume"
           type="range"

@@ -4,13 +4,23 @@ import { BPM } from "./theory.js";
 // viz
 const visWindow = 15;
 
+const computedStyle = getComputedStyle(document.body);
+const colors = {
+  dark: computedStyle.getPropertyValue("--dark"),
+  cool: computedStyle.getPropertyValue("--cool"),
+  medium: computedStyle.getPropertyValue("--medium"),
+  warm: computedStyle.getPropertyValue("--warm"),
+  warm_ui: computedStyle.getPropertyValue("--warm-ui"),
+  light: computedStyle.getPropertyValue("--light"),
+};
+console.log(colors);
 export function drawWaveform(canvas, buffer) {
   const DPR = window.devicePixelRatio;
   canvas.width = canvas.offsetWidth * DPR;
   canvas.height = canvas.offsetHeight * DPR;
   const waveHeight = canvas.height;
   let ctx = canvas.getContext("2d");
-  ctx.strokeStyle = "pink";
+  ctx.strokeStyle = colors.cool;
   ctx.lineWidth = DPR * 2;
   ctx.setLineDash([DPR * 2, DPR * 2]);
   for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
@@ -43,51 +53,77 @@ export function drawTracks(canvas, tracks, currentTime, tempo) {
   ctx.save();
   ctx.translate(0, tickHeight);
   // draw track blocks
-  const chunks = tracks.flatMap(t => t.chunks);
-  chunks
-    .filter(
-      c =>
-        c.startTime < currentTime + visWindow &&
-        c.endTime > currentTime - visWindow
-    )
-    .forEach((chunk, i) => {
-      const trackSize = trackHeight / tracks.length;
-      const start = Math.max(
-        lerp(
-          0,
-          canvas.width,
-          ilerp(-visWindow, visWindow, chunk.startTime - currentTime)
-        ),
-        0
-      );
-      ctx.fillStyle = "pink";
-      ctx.fillRect(
-        start,
-        (i + 0.1) * trackSize,
-        Math.min(
+  tracks.forEach((track, i) => {
+    track.chunks
+      .filter(
+        c =>
+          c.startTime < currentTime + visWindow &&
+          c.endTime > currentTime - visWindow
+      )
+      .forEach(chunk => {
+        const trackSize = trackHeight / tracks.length;
+        const start = Math.max(
           lerp(
             0,
             canvas.width,
-            ilerp(-visWindow, visWindow, chunk.endTime - currentTime)
-          ) - start,
-          canvas.width
-        ),
-        trackSize * 0.8
-      );
-      ctx.fillStyle = "indigo";
-      ctx.fillText(
-        chunk.track.name,
-        Math.max(
-          canvas.width / 2 +
-            ((chunk.startTime - currentTime) / visWindow) * (canvas.width / 2) +
-            8,
-          4
-        ),
-        (i + 0.1) * trackSize + 8
-      );
-    });
+            ilerp(-visWindow, visWindow, chunk.startTime - currentTime)
+          ),
+          0
+        );
+        ctx.fillStyle = colors.dark;
+
+        ctx.fillRect(
+          start,
+          (i + 0.1) * trackSize,
+          Math.min(
+            lerp(
+              0,
+              canvas.width,
+              ilerp(-visWindow, visWindow, chunk.endTime - currentTime)
+            ) - start,
+            canvas.width
+          ),
+          trackSize * 0.8
+        );
+
+        ctx.fillStyle = colors.warm;
+        ctx.fillRect(
+          start + DPR * 2,
+          (i + 0.1) * trackSize + DPR * 2,
+          Math.min(
+            lerp(
+              0,
+              canvas.width,
+              ilerp(-visWindow, visWindow, chunk.endTime - currentTime)
+            ) - start,
+            canvas.width
+          ) -
+            DPR * 4,
+          trackSize * 0.8 - DPR * 4
+        );
+        ctx.fillStyle = colors.dark;
+        ctx.fillText(
+          chunk.track.name,
+          Math.max(
+            canvas.width / 2 +
+              ((chunk.startTime - currentTime) / visWindow) *
+                (canvas.width / 2) +
+              8 * DPR,
+            8 * DPR
+          ),
+          (i + 0.1) * trackSize + 8 * DPR
+        );
+        // if (chunk.notes) {
+        //   chunk.notes.forEach(([note, start, length]) => {
+        //     let y = lerp((i + 0.1) * trackSize, trackSize * .8, 1 - note/96);
+        //     ctx.fillRect(start * )
+        //   });
+        // }
+      });
+  });
+
   ctx.restore();
-  ctx.fillStyle = "lavender";
+  ctx.fillStyle = colors.dark;
   const numBeats = visWindow * tempo * BPM;
   const songBeat = tempo * BPM * currentTime;
 

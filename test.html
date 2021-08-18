@@ -13,10 +13,93 @@
   </head>
   <body>
     <button>do</button>
-    <script>
+    <script type="module">
+      import { note, pitch, SCALES, chord, CHORDS } from "./theory.js";
+      import { triangle, envelope, sine } from "./synth.js";
+
       document
         .querySelector("button")
         .addEventListener("click", e => go(e).catch(e => console.warn(e)));
+
+      let notes = Array(33);
+      notes[0] = 0;
+      notes[8] = 0;
+      notes[16] = 0;
+      notes[24] = 0;
+      notes[32] = 0;
+
+      const key = pitch("c", 4);
+      const progression = [
+        ["c", "MAJOR"],
+        ["g", "MAJOR"],
+        ["a", "MINOR"],
+        ["f", "MAJOR"],
+      ];
+
+      const canvas = document.createElement("canvas");
+      canvas.width = 720;
+      canvas.height = 400;
+      document.body.append(canvas);
+      const ctx = canvas.getContext("2d");
+
+      for (let step = 8; step > 1; step /= 2) {
+        for (let pos = 0; pos < notes.length - 1; pos += step) {
+          let mp = pos + step / 2;
+          notes[mp] = Math.round(
+            (notes[pos] + notes[pos + step]) / 2 +
+              (Math.random() - 0.5) * (step * 1.5)
+          );
+        }
+      }
+
+      // notes = [0, 1, 2, 3, 4, 5, 6];
+      notes = notes.map((n, i) => {
+        let bar = Math.floor(i / 8);
+        let key = progression[bar % progression.length];
+        let intervals = SCALES[key[1]];
+        let root = key[0];
+        let octave = Math.floor((n + 35) / 7);
+        let interval = intervals[(n + 35) % 7];
+        return pitch(root, octave) + interval;
+      });
+      notes = notes.slice(0, notes.length - 1);
+
+      for (let i = 0; i < Math.random() * 10; i++) {
+        console.log("boop");
+        notes[(Math.random() * notes.length) | 0] = 0;
+      }
+
+      const xs = 700 / notes.length;
+      const ys = 100 / 16;
+
+      function viz({ t, BPS }) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.beginPath();
+        for (let i = 0; i < notes.length; i++) {
+          if (notes[i]) {
+            let x = 10 + xs * i;
+            let y = 200 - (notes[i] - pitch("c", 4)) * ys;
+            ctx.lineTo(x, y);
+            ctx.strokeRect(x - 4, y - 4, 8, 8);
+          }
+        }
+        ctx.stroke();
+        if (t) {
+          let beat = (t * BPS) % notes.length;
+          let bar = (beat / 8) | 0;
+          let key = progression[bar % progression.length];
+          ctx.fillRect(
+            (beat / notes.length) * (canvas.width - 20) + 10,
+            0,
+            1,
+            canvas.height
+          );
+          ctx.font = "normal 20px sans-serif";
+          ctx.fillText(key.join(" "), 20, 40);
+        }
+      }
+
+      viz({});
 
       async function go(e) {
         // const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -25,12 +108,16 @@
 
         const processor = context.createScriptProcessor(4096, 2, 2);
 
-        let didbip = false;
+        const env = envelope(0.05, 0.1, 0.8);
+
+        const BPS = 2;
+
+        let vizFrame;
+
         processor.onaudioprocess = function (audioProcessingEvent) {
-          if (!didbip) console.log("bip");
-          didbip = true;
           // The output buffer contains the samples that will be modified and played
-          var outputBuffer = audioProcessingEvent.outputBuffer;
+          let outputBuffer = audioProcessingEvent.outputBuffer;
+          let startTime = audioProcessingEvent.playbackTime;
 
           for (
             let channel = 0;
@@ -38,10 +125,26 @@
             channel++
           ) {
             let buffer = outputBuffer.getChannelData(channel);
-            for (var i = 0; i < buffer.length; i++) {
-              buffer[i] = Math.random() * 0.1 - 0.05;
+            for (let i = 0; i < buffer.length; i++) {
+              let t = startTime + i / sampleRate;
+              let beat = Math.floor(t * BPS);
+              let n = notes[beat % notes.length];
+              let fBeat = (t * BPS) % 1;
+              let bar = Math.floor(beat / 8);
+              let key = progression[bar % progression.length];
+              buffer[i] = 0;
+              if (n) {
+                buffer[i] += (triangle(note(n), t) * env(fBeat)) / 8;
+              }
+              chord(pitch(key[0], 4), CHORDS[key[1]]).forEach(f => {
+                buffer[i] += sine(f, t) * 0.05;
+              });
             }
           }
+          cancelAnimationFrame(vizFrame);
+          vizFrame = requestAnimationFrame(() => {
+            viz({ t: startTime, BPS });
+          });
         };
 
         // processor.connect(context.destination);
@@ -49,12 +152,12 @@
         // thanks safari
         let source = context.createBufferSource();
         let buffer = context.createBuffer(2, 4096, context.sampleRate);
-        let data = buffer.getChannelData(0);
-        let data2 = buffer.getChannelData(1);
-        for (let i = 0; i < data.length; i++) {
-          data[i] = Math.random() * 0.1 - 0.05;
-          data2[i] = Math.random() * 0.1 - 0.05;
-        }
+        // let data = buffer.getChannelData(0);
+        // let data2 = buffer.getChannelData(1);
+        // for (let i = 0; i < data.length; i++) {
+        //   data[i] = Math.random() * 0.1 - 0.05;
+        //   data2[i] = Math.random() * 0.1 - 0.05;
+        // }
         source.buffer = buffer;
         source.loop = true;
         source.connect(processor);

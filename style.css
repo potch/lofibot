@@ -1,3 +1,13 @@
+:root {
+  --dark: #332244;
+  --dark-a50: #33224470;
+  --cool: #5566aa;
+  --medium: #aa7799;
+  --warm: #dd9999;
+  --warm: #efb9b9;
+  --warm-ui: pink;
+  --light: #ffdd99;
+}
 * {
   box-sizing: border-box;
 }
@@ -7,8 +17,8 @@ body {
   margin: 0;
 }
 html {
-  background: seashell;
-  color: darkslateblue;
+  background: var(--cool);
+  color: pink;
   font-size: 20px;
 }
 body {
@@ -37,13 +47,13 @@ header > * + * {
 .tracks {
   grid-area: tracks;
   display: grid;
-  background: indigo;
+  background: var(--light);
   position: relative;
 }
 .knobs {
   grid-area: knobs;
-  border: 3px solid pink;
-  background: indigo;
+  border: 3px solid var(--dark);
+  background: var(--light);
   display: flex;
   flex-wrap: wrap;
   padding: 0.5rem;
@@ -56,13 +66,13 @@ header > * + * {
   font-size: 0.7rem;
   width: 3.5rem;
   height: 3.5rem;
-  color: pink;
+  color: var(--dark);
   font-family: sans-serif;
   font-variant-caps: small-caps;
   letter-spacing: 0.1em;
   position: relative;
   padding: 0.5rem 0.25rem 0.25rem;
-  background: rgba(0, 0, 0, 0.5);
+  /* background: rgba(0, 0, 0, 0.1); */
   justify-content: center;
   align-items: center;
 }
@@ -70,11 +80,11 @@ header > * + * {
   width: 1.5rem;
   height: 1.5rem;
   border-radius: 100%;
-  background: pink;
+  background: var(--warm);
   display: block;
   justify-self: center;
   position: relative;
-  border: 2px solid deeppink;
+  border: 2px solid var(--dark);
 }
 .knob__thumb:after {
   display: block;
@@ -85,12 +95,12 @@ header > * + * {
   top: 0.125rem;
   left: calc(50% - 0.15rem);
   border-radius: 100%;
-  background: indigo;
+  background: var(--dark);
 }
 canvas {
   display: block;
-  border: 3px solid pink;
-  background: indigo;
+  border: 3px solid var(--dark);
+  background: var(--light);
   width: 100%;
   height: 100%;
   position: absolute;
@@ -103,25 +113,35 @@ canvas {
 }
 .status {
   grid-area: footer;
-  margin: 0;
+  margin: -0.5em 0 0 0;
   font-variant-caps: small-caps;
   letter-spacing: 0.1em;
+  background: var(--dark-a50);
+  padding: 0.25em 0.5em;
 }
 h1 {
   font-family: serif;
   font-style: italic;
-  margin: 0;
-  letter-spacing: 0.05em;
+  margin: 0 0 0 0.1em;
+  letter-spacing: 0.075em;
+  -webkit-text-stroke: 6px var(--dark);
+  paint-order: stroke fill;
+}
+button svg {
+  height: 1em;
+}
+button svg path {
+  fill: currentColor;
 }
 button {
   font: inherit;
-  color: pink;
+  color: var(--dark);
   border: 3px solid currentColor;
-  background: darkslateblue;
+  background: var(--warm);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.25em 1em;
+  padding: 0.5em;
   cursor: pointer;
 }
 

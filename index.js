@@ -24,6 +24,7 @@ document
 
 async function go(e) {
   document.querySelector(".start").setAttribute("disabled", true);
+  document.querySelector(".stop").removeAttribute("disabled");
   document.querySelector(".generate").removeAttribute("disabled");
 
   const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -178,6 +179,14 @@ async function go(e) {
 
   document.querySelector(".generate").addEventListener("click", e => {
     currentSong = generate(context, knobs, samples);
+  });
+
+  document.querySelector(".stop").addEventListener("click", e => {
+    document.querySelector(".start").removeAttribute("disabled");
+    document.querySelector(".stop").setAttribute("disabled", true);
+    document.querySelector(".generate").setAttribute("disabled", true);
+    cancelAnimationFrame(trackDrawFrame);
+    context.close();
   });
 
   document.querySelector(".volume").addEventListener("input", e => {
