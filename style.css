@@ -120,11 +120,24 @@ canvas {
   padding: 0.25em 0.5em;
 }
 h1 {
+  position: relative;
+  margin: 0 0 0 0.1em;
+}
+h1 span {
   font-family: serif;
   font-style: italic;
-  margin: 0 0 0 0.1em;
   letter-spacing: 0.075em;
   -webkit-text-stroke: 6px var(--dark);
+  paint-order: stroke fill;
+}
+h1 .beta {
+  position: absolute;
+  top: 70%;
+  left: 60%;
+  color: var(--light);
+  letter-spacing: 0.3em;
+  font-size: 0.5em;
+  -webkit-text-stroke: 2px var(--dark);
   paint-order: stroke fill;
 }
 button svg {

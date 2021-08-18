@@ -11,9 +11,6 @@ import {
   pianoRollTrack,
 } from "./tracks.js";
 
-const flip = (n, threshold) => Math.random() * n < threshold;
-const randInt = (min, max) => Math.floor((max + 1 - min) * Math.random()) + min;
-
 const progressions = [
   [
     [pitch("D", 4), CHORDS.MINOR11],
@@ -89,7 +86,7 @@ function hatPattern(random, length = 1) {
 }
 
 function generateIntroSection({ song, samples, random }) {
-  const length = song.progression.length * randInt(1, 2);
+  const length = song.progression.length * random.int(4, 2);
   const section = {
     length,
     automations: [
@@ -105,7 +102,7 @@ function generateIntroSection({ song, samples, random }) {
     tracks: [],
   };
   // maybe include drums
-  if (flip(3, 2)) {
+  if (random.int(3) > 2) {
     section.tracks.push({
       name: "snare",
       chunk: {
@@ -114,7 +111,7 @@ function generateIntroSection({ song, samples, random }) {
       },
     });
     // if there's drums, maybe add hat
-    if (flip(3, 2)) {
+    if (random.int(3) > 2) {
       section.tracks.push({
         name: "hat",
         chunk: {
@@ -122,7 +119,7 @@ function generateIntroSection({ song, samples, random }) {
         },
       });
       // if there's hat, maybe add kick
-      if (flip(3, 2)) {
+      if (random.int(3) > 2) {
         section.tracks.push({
           name: "kick",
           chunk: {
@@ -148,7 +145,7 @@ function generateIntroSection({ song, samples, random }) {
 }
 
 function generateMainSection({ song, samples, random }) {
-  const length = song.progression.length * randInt(2, 4);
+  const length = song.progression.length * random.int(4, 2);
   const section = {
     length,
     automations: [
@@ -202,7 +199,7 @@ function generateMainSection({ song, samples, random }) {
 }
 
 function generateBSection({ song, samples, random }) {
-  const length = song.progression.length * randInt(2, 4);
+  const length = song.progression.length * random.int(4, 2);
   const section = {
     length,
     automations: [
