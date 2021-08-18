@@ -1,12 +1,13 @@
 import { BPM, chord } from "./theory.js";
 import { loadSound } from "./synth.js";
-
+import { Random } from "./procgen.js";
 import { drawKnobs, drawTracks, drawWaveform } from "./daw.js";
 
 import { generate } from "./generate.js";
 
 const status = document.querySelector(".status");
 const samples = {};
+const random = new Random();
 
 let canvas = document.querySelector(".waveform canvas");
 let tracksCanvas = document.querySelector(".tracks canvas");
@@ -47,7 +48,12 @@ async function go(e) {
   samples.snare = await loadSound(context, "snare2.wav");
   samples.piano = await loadSound(context, "piano1.wav");
 
-  currentSong = generate(context, knobs, samples);
+  let initialSeed = random.int();
+  if (window.location.search && window.location.search.length > 1) {
+    initialSeed = parseInt(window.location.search.substr(1), 16);
+    initialSeed = initialSeed || 0;
+  }
+  currentSong = generate(context, knobs, samples, initialSeed);
 
   const processor = context.createScriptProcessor(2048, 1, 2);
   processor.connect(knobs.filterFeed);
@@ -130,7 +136,9 @@ async function go(e) {
       Math.floor((Math.abs(timeStart) * 100) % 100)
         .toString()
         .padStart(2, 0);
-    status.innerText = `playing [${renderTime | 0}ms/${
+    status.innerText = `now playing: ${currentSong.seed.toString(16)} [${
+      renderTime | 0
+    }ms/${
       ((outputBuffer.length / context.sampleRate) * 1000) | 0
     }ms] (${prettyTime})`;
 
@@ -143,7 +151,7 @@ async function go(e) {
 
     let barDuration = 4 / (tempo * BPM);
     if (timeStart > currentSong.length * barDuration + 1) {
-      currentSong = generate(context, knobs, samples);
+      currentSong = generate(context, knobs, samples, random.int());
     }
   };
 
@@ -167,9 +175,6 @@ async function go(e) {
   let source = context.createBufferSource();
   let buffer = context.createBuffer(1, 1024, context.sampleRate);
   let data = buffer.getChannelData(0);
-  // for (let i = 0; i < data.length; i++) {
-  //   data[i] = Math.random() * 0.01 - 0.005;
-  // }
   source.buffer = buffer;
   source.loop = true;
   source.connect(processor);
@@ -177,8 +182,12 @@ async function go(e) {
 
   console.log(context.currentTime);
 
+  window.generate = seed => {
+    currentSong = generate(context, knobs, samples, parseInt(seed, 16));
+  };
+
   document.querySelector(".generate").addEventListener("click", e => {
-    currentSong = generate(context, knobs, samples);
+    currentSong = generate(context, knobs, samples, random.int());
   });
 
   document.querySelector(".stop").addEventListener("click", e => {

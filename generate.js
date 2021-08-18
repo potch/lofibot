@@ -1,5 +1,5 @@
 import { BPM, pitch, CHORDS, chord } from "./theory.js";
-
+import { PRNG } from "./procgen.js";
 import { triangle, envelope, square } from "./synth.js";
 import { clamp } from "./util.js";
 
@@ -58,27 +58,27 @@ const progressions = [
   ],
 ];
 
-function kickPattern(length = 1) {
+function kickPattern(random, length = 1) {
   let kickPattern = "*.......*.......".repeat(length).split("");
-  for (let i = 0; i < Math.random() * 4; i++) {
-    kickPattern[(Math.random() * kickPattern.length) | 0] = "*";
+  for (let i = 0; i < random.int(4); i++) {
+    kickPattern[random.int(kickPattern.length)] = "*";
   }
   return kickPattern;
 }
-function snarePattern(length = 1) {
+function snarePattern(random, length = 1) {
   let snarePattern = "....*.......*...".repeat(length).split("");
   return snarePattern;
 }
 
-function hatPattern(length = 1) {
+function hatPattern(random, length = 1) {
   let hatPattern = "................".repeat(length).split("");
-  const hatResolution = Math.floor(Math.random() * 7) + 2;
+  const hatResolution = random.int(9, 7);
   for (let i = 0; i < hatPattern.length; i += hatResolution) {
     hatPattern[i] = "*";
   }
-  let modCount = Math.random() * 8;
+  let modCount = random.int(8);
   for (let i = 0; i < modCount + 1; i++) {
-    let pos = (Math.random() * hatPattern.length) | 0;
+    let pos = random.int(hatPattern.length);
     if (hatPattern[pos] === "*") {
       hatPattern[pos] = ".";
     } else {
@@ -88,7 +88,7 @@ function hatPattern(length = 1) {
   return hatPattern;
 }
 
-function generateIntroSection({ song, samples }) {
+function generateIntroSection({ song, samples, random }) {
   const length = song.progression.length * randInt(1, 2);
   const section = {
     length,
@@ -109,7 +109,7 @@ function generateIntroSection({ song, samples }) {
     section.tracks.push({
       name: "snare",
       chunk: {
-        render: drumTrack(samples.snare, snarePattern()),
+        render: drumTrack(samples.snare, snarePattern(random)),
         start: 0,
       },
     });
@@ -118,7 +118,7 @@ function generateIntroSection({ song, samples }) {
       section.tracks.push({
         name: "hat",
         chunk: {
-          render: drumTrack(samples.hat, hatPattern(2)),
+          render: drumTrack(samples.hat, hatPattern(random, 2)),
         },
       });
       // if there's hat, maybe add kick
@@ -126,7 +126,7 @@ function generateIntroSection({ song, samples }) {
         section.tracks.push({
           name: "kick",
           chunk: {
-            render: drumTrack(samples.kick, kickPattern(2)),
+            render: drumTrack(samples.kick, kickPattern(random, 2)),
           },
         });
       }
@@ -135,10 +135,7 @@ function generateIntroSection({ song, samples }) {
   section.tracks.push({
     name: "chord",
     chunk: {
-      render: chordTrack(
-        Math.floor(Math.random() * 8) / 8,
-        envelope(0.1, 0.4, 4)
-      ),
+      render: chordTrack(random.int(8) / 8, envelope(0.1, 0.4, 4)),
     },
   });
   section.tracks.push({
@@ -150,7 +147,7 @@ function generateIntroSection({ song, samples }) {
   return section;
 }
 
-function generateMainSection({ song, samples }) {
+function generateMainSection({ song, samples, random }) {
   const length = song.progression.length * randInt(2, 4);
   const section = {
     length,
@@ -171,19 +168,19 @@ function generateMainSection({ song, samples }) {
       {
         name: "snare",
         chunk: {
-          render: drumTrack(samples.snare, snarePattern()),
+          render: drumTrack(samples.snare, snarePattern(random)),
         },
       },
       {
         name: "hat",
         chunk: {
-          render: drumTrack(samples.hat, hatPattern(2)),
+          render: drumTrack(samples.hat, hatPattern(random, 2)),
         },
       },
       {
         name: "kick",
         chunk: {
-          render: drumTrack(samples.kick, kickPattern(2)),
+          render: drumTrack(samples.kick, kickPattern(random, 2)),
         },
       },
       {
@@ -195,9 +192,70 @@ function generateMainSection({ song, samples }) {
       {
         name: "chord",
         chunk: {
-          render: chordTrack(
-            Math.floor(Math.random() * 8) / 8,
-            envelope(0.1, 0.4, 4)
+          render: chordTrack(random.int(8) / 8, envelope(0.1, 0.4, 4)),
+        },
+      },
+    ],
+  };
+
+  return section;
+}
+
+function generateBSection({ song, samples, random }) {
+  const length = song.progression.length * randInt(2, 4);
+  const section = {
+    length,
+    automations: [
+      {
+        name: "volume",
+        values: [
+          [0, 1],
+          [length - 1, 1],
+        ],
+      },
+      {
+        name: "filter",
+        values: [[0, 0]],
+      },
+    ],
+    tracks: [
+      {
+        name: "snare",
+        chunk: {
+          render: drumTrack(samples.snare, snarePattern(random)),
+        },
+      },
+      {
+        name: "hat",
+        chunk: {
+          render: drumTrack(samples.hat, hatPattern(random, 2)),
+        },
+      },
+      {
+        name: "kick",
+        chunk: {
+          render: drumTrack(samples.kick, kickPattern(random, 2)),
+        },
+      },
+      {
+        name: "bass",
+        chunk: {
+          render: bassTrack(triangle, envelope(0.25, 1, 3.9)),
+        },
+      },
+      {
+        name: "chord",
+        chunk: {
+          render: chordTrack(random.int(8) / 8, envelope(0.1, 0.4, 4)),
+        },
+      },
+      {
+        name: "arp",
+        chunk: {
+          render: arpeggiatorTrack(
+            triangle,
+            envelope(0.1, 0.2, 0.99),
+            random.choose([8, 12, 16])
           ),
         },
       },
@@ -205,6 +263,75 @@ function generateMainSection({ song, samples }) {
   };
 
   return section;
+}
+
+function generateBridgeSection({ song, samples, random }) {
+  const length = song.progression.length * random.int(4, 2);
+  const section = {
+    length,
+    automations: [
+      {
+        name: "volume",
+        values: [
+          [0, 1],
+          [length - 1, 1],
+        ],
+      },
+      {
+        name: "filter",
+        values: [[0, 0]],
+      },
+    ],
+    tracks: [
+      {
+        name: "snare",
+        chunk: {
+          render: drumTrack(samples.snare, snarePattern(random)),
+        },
+      },
+      {
+        name: "hat",
+        chunk: {
+          render: drumTrack(samples.hat, hatPattern(random, 2)),
+        },
+      },
+      {
+        name: "kick",
+        chunk: {
+          render: drumTrack(samples.kick, kickPattern(random, 2)),
+        },
+      },
+      {
+        name: "bass",
+        chunk: {
+          render: bassTrack(triangle, envelope(0.25, 1, 3.9)),
+        },
+      },
+    ],
+  };
+
+  return section;
+}
+
+function generateOutroSection({ song, section, random }) {
+  console.log(section);
+  const output = {
+    length: section.length,
+    automations: [...section.automations],
+    tracks: [...section.tracks],
+  };
+  const volumeAutomation = output.automations.findIndex(
+    a => a.name === "volume"
+  );
+  output.automations.splice(volumeAutomation, 1, {
+    name: "volume",
+    values: [
+      [0, 1],
+      [section.length - song.progression.length, 1],
+      [section.length, 0],
+    ],
+  });
+  return output;
 }
 
 /* generation process goals:
@@ -216,9 +343,12 @@ function generateMainSection({ song, samples }) {
  * - compute automations
  */
 
-export function generate(context, knobs, samples) {
+export function generate(context, knobs, samples, seed = 0) {
+  const random = new PRNG(seed);
+
   const song = {
-    tempo: 70 + Math.random() * 30,
+    seed,
+    tempo: random.int(100, 70),
     startTime: context.currentTime + 1,
     tracks: [],
     sections: {},
@@ -229,115 +359,31 @@ export function generate(context, knobs, samples) {
   };
 
   // pick a key
-  let transpose = Math.round(Math.random() * 12);
+  let transpose = random.int(12);
 
   // select a progression
-  song.progression = progressions[(Math.random() * progressions.length) | 0];
+  song.progression = random.choose(progressions);
 
   song.progression.forEach(chord => {
     chord[0] += transpose;
     chord[1] = [...chord[1]];
     for (let i = 1; i < chord[1].length; i++) {
-      chord[1][i] -= Math.random() * 0.1;
+      chord[1][i] -= random.float() * 0.1;
     }
   });
 
-  song.structure = ["intro", "main"];
+  song.structure = ["intro", "a", "b", "c", "b", "outro"];
 
-  song.sections.intro = generateIntroSection({ song, samples });
-  song.sections.main = generateMainSection({ song, samples });
+  song.sections.intro = generateIntroSection({ song, samples, random });
+  song.sections.a = generateMainSection({ song, samples, random });
+  song.sections.b = generateBSection({ song, samples, random });
+  song.sections.c = generateBridgeSection({ song, samples, random });
+  song.sections.outro = generateOutroSection({
+    song,
+    section: song.sections.b,
+  });
+
   console.log(song.sections);
-
-  const arpSpeed = [8, 12, 16][(Math.random() * 3) | 0];
-
-  // song.length = song.progression.length * 16
-  /*
-  song.tracks = [
-    {
-      name: "bass",
-      volume: 0.2,
-      chunks: [
-        {
-          start: 0,
-          render: bassTrack(triangle, envelope(0.25, 1, 3.9)),
-        },
-      ],
-    },
-    {
-      name: "snare",
-      volume: 0.3,
-      chunks: [
-        {
-          start: 0,
-          render: drumTrack(samples.snare, snarePattern),
-        },
-      ],
-    },
-    {
-      name: "kick",
-      volume: 0.3,
-      chunks: [
-        {
-          start: 0,
-          render: drumTrack(samples.kick, kickPattern),
-        },
-      ],
-    },
-    {
-      name: "hat",
-      volume: 0.3,
-      chunks: [
-        {
-          start: 0,
-          render: drumTrack(samples.hat, hatPattern),
-        },
-      ],
-    },
-    {
-      name: "arp",
-      volume: 0.2,
-      chunks: [
-        {
-          start: song.progression.length * 2,
-          length: song.progression.length * 4,
-          render: arpeggiatorTrack(
-            triangle,
-            envelope(0.1, 0.2, 0.99),
-            arpSpeed
-          ),
-        },
-        {
-          start: song.progression.length * 10,
-          render: arpeggiatorTrack(
-            triangle,
-            envelope(0.1, 0.2, 0.99),
-            arpSpeed
-          ),
-        },
-      ],
-    },
-    {
-      name: "chord",
-      volume: 0.2,
-      chunks: [
-        {
-          render: chordTrack(
-            Math.floor(Math.random() * 8) / 8,
-            envelope(0.1, 0.4, 4)
-          ),
-          start: 0,
-          length: song.progression.length * 6,
-        },
-        {
-          start: song.progression.length * 10,
-          render: chordTrack(
-            Math.floor(Math.random() * 8) / 8,
-            envelope(0.1, 0.4, 4)
-          ),
-        },
-      ],
-    },
-  ];*/
 
   // const leadNotes = [];
   // const songKey = song.progression[0];
@@ -377,7 +423,6 @@ export function generate(context, knobs, samples) {
     section.tracks.forEach(sectionTrack => {
       let track = song.tracks.find(t => t.name === sectionTrack.name);
       if (!track) {
-        console.log("couldnt find track named", sectionTrack.name);
         track = {
           name: sectionTrack.name,
           volume: 0.2,
@@ -396,20 +441,6 @@ export function generate(context, knobs, samples) {
     position += section.length || 0;
   });
   song.length = position;
-
-  // song.automations = {
-  //   volume: [
-  //     [0, 0],
-  //     [song.progression.length, 1],
-  //     [song.length - song.progression.length, 1],
-  //     [song.length, 0],
-  //   ],
-  //   filter: [
-  //     [0, 1],
-  //     [song.progression.length * 2 - 0.5, 1],
-  //     [song.progression.length * 2, 0],
-  //   ],
-  // };
 
   song.tracks.forEach(t => {
     if (!t.chunks) return;
