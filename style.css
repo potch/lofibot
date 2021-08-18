@@ -137,7 +137,7 @@ h1 .beta {
   color: var(--light);
   letter-spacing: 0.3em;
   font-size: 0.5em;
-  -webkit-text-stroke: 2px var(--dark);
+  -webkit-text-stroke: 3px var(--dark);
   paint-order: stroke fill;
 }
 button svg {

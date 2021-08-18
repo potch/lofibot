@@ -102,7 +102,7 @@ function generateIntroSection({ song, samples, random }) {
     tracks: [],
   };
   // maybe include drums
-  if (random.int(3) > 2) {
+  if (random.int(3) < 2) {
     section.tracks.push({
       name: "snare",
       chunk: {
@@ -111,7 +111,7 @@ function generateIntroSection({ song, samples, random }) {
       },
     });
     // if there's drums, maybe add hat
-    if (random.int(3) > 2) {
+    if (random.int(3) < 2) {
       section.tracks.push({
         name: "hat",
         chunk: {
@@ -119,7 +119,7 @@ function generateIntroSection({ song, samples, random }) {
         },
       });
       // if there's hat, maybe add kick
-      if (random.int(3) > 2) {
+      if (random.int(3) < 2) {
         section.tracks.push({
           name: "kick",
           chunk: {
