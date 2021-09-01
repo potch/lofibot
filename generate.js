@@ -361,6 +361,8 @@ export function generate(context, knobs, samples, seed = 0) {
   // select a progression
   song.progression = random.choose(progressions);
 
+  console.log("progression", song.progression);
+  song.progression = song.progression.map(chord => [chord[0], [...chord[1]]]);
   song.progression.forEach(chord => {
     chord[0] += transpose;
     chord[1] = [...chord[1]];
