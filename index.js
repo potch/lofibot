@@ -7,7 +7,7 @@ import { generate } from "./generate.js";
 
 const status = document.querySelector(".status");
 const samples = {};
-const random = new Random();
+const random = new Random(Date.now());
 
 let canvas = document.querySelector(".waveform canvas");
 let tracksCanvas = document.querySelector(".tracks canvas");
